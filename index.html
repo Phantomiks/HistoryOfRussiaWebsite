@@ -113,7 +113,46 @@
         }
 
         .controls {
-            display: none;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 25px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-prev {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-next {
+            background: white;
+            color: #667eea;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-prev:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-next:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .counter {
@@ -171,7 +210,7 @@
         </div>
 
         <div class="swipe-hint">
-            👆 Листай вверх для новых событий
+            👆 Свайп или нажми на карту чтобы перевернуть
         </div>
 
         <div class="card-wrapper" id="cardWrapper" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)">
@@ -254,8 +293,8 @@
         ];
 
         let currentIndex = 0;
-        let touchStartY = 0;
-        let touchEndY = 0;
+        let touchStartX = 0;
+        let touchEndX = 0;
         let isFlipped = false;
 
         function updateCard() {
@@ -289,7 +328,7 @@
         }
 
         function handleTouchStart(event) {
-            touchStartY = event.changedTouches[0].screenY;
+            touchStartX = event.changedTouches[0].screenX;
         }
 
         function handleTouchMove(event) {
@@ -297,23 +336,23 @@
         }
 
         function handleTouchEnd(event) {
-            touchEndY = event.changedTouches[0].screenY;
+            touchEndX = event.changedTouches[0].screenX;
             handleSwipe();
         }
 
         function handleSwipe() {
             const swipeThreshold = 50;
-            const diff = touchStartY - touchEndY;
+            const diff = touchStartX - touchEndX;
 
             if (Math.abs(diff) < 30) {
                 // Small swipe - flip the card
                 toggleFlip();
             } else if (diff > swipeThreshold) {
-                // Swipe up - next event
+                // Swipe left - next event
                 if (!isFlipped) nextEvent();
                 else toggleFlip();
             } else if (diff < -swipeThreshold) {
-                // Swipe down - previous event
+                // Swipe right - previous event
                 if (!isFlipped) previousEvent();
                 else toggleFlip();
             }
