@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История России</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .card-wrapper {
+            perspective: 1000px;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .year {
+            font-size: 72px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .year-label {
+            font-size: 14px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .card-back {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .event-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .event-description {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: none;
+        }
+
+        .counter {
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 20px;
+        }
+
+        .swipe-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .year {
+                font-size: 54px;
+            }
+
+            .card-wrapper {
+                height: 350px;
+            }
+
+            .card-face {
+                padding: 30px;
+                font-size: 16px;
+            }
+
+            .event-title {
+                font-size: 18px;
+            }
+
+            .event-description {
+                font-size: 14px;
+            }
+        }
+
+        .touch-active {
+            cursor: grab;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>История России</h1>
+            <p>Исторические события по годам</p>
+        </div>
+
+        <div class="swipe-hint">
+            👆 Листай вверх для новых событий
+        </div>
+
+        <div class="card-wrapper" id="cardWrapper" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)">
+            <div class="card" id="card">
+                <div class="card-face card-front">
+                    <div class="year-label">Год</div>
+                    <div class="year" id="year">1721</div>
+                </div>
+                <div class="card-face card-back">
+                    <div>
+                        <div class="event-title" id="eventTitle">Провозглашение Империи</div>
+                        <div class="event-description" id="eventDescription">Пётр I провозглашает Российскую империю</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-prev" onclick="previousEvent()">← Назад</button>
+            <button class="btn-next" onclick="nextEvent()">Вперёд →</button>
+        </div>
+
+        <div class="counter">
+            <span id="counter">1 из 10</span>
+        </div>
+    </div>
+
+    <script>
+        const events = [
+            {
+                year: 1721,
+                title: "Провозглашение Империи",
+                description: "Пётр I провозглашает Российскую империю, завершив Великую Северную войну"
+            },
+            {
+                year: 1755,
+                title: "Открытие МГУ",
+                description: "Основан Московский государственный университет"
+            },
+            {
+                year: 1762,
+                title: "Екатерина II",
+                description: "Екатерина Великая начинает своё правление"
+            },
+            {
+                year: 1812,
+                title: "Отечественная война",
+                description: "Разгром французской армии Наполеона, занявшей Москву"
+            },
+            {
+                year: 1861,
+                title: "Отмена крепостного права",
+                description: "Александр II подписывает манифест об освобождении крестьян"
+            },
+            {
+                year: 1917,
+                title: "Октябрьская революция",
+                description: "Свержение Временного правительства, приход большевиков к власти"
+            },
+            {
+                year: 1941,
+                title: "Начало ВОВ",
+                description: "Нападение нацистской Германии на СССР, начало Великой Отечественной войны"
+            },
+            {
+                year: 1961,
+                title: "Первый полёт в космос",
+                description: "Юрий Гагарин становится первым человеком в космосе"
+            },
+            {
+                year: 1991,
+                title: "Распад СССР",
+                description: "Официальный распад Советского Союза"
+            },
+            {
+                year: 2000,
+                title: "Новая Россия",
+                description: "Владимир Путин становится Президентом Российской Федерации"
+            }
+        ];
+
+        let currentIndex = 0;
+        let touchStartY = 0;
+        let touchEndY = 0;
+        let isFlipped = false;
+
+        function updateCard() {
+            const event = events[currentIndex];
+            document.getElementById('year').textContent = event.year;
+            document.getElementById('eventTitle').textContent = event.title;
+            document.getElementById('eventDescription').textContent = event.description;
+            document.getElementById('counter').textContent = `${currentIndex + 1} из ${events.length}`;
+            isFlipped = false;
+            document.getElementById('card').classList.remove('flipped');
+        }
+
+        function nextEvent() {
+            if (currentIndex < events.length - 1) {
+                currentIndex++;
+                updateCard();
+            }
+        }
+
+        function previousEvent() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateCard();
+            }
+        }
+
+        function toggleFlip() {
+            const card = document.getElementById('card');
+            isFlipped = !isFlipped;
+            card.classList.toggle('flipped');
+        }
+
+        function handleTouchStart(event) {
+            touchStartY = event.changedTouches[0].screenY;
+        }
+
+        function handleTouchMove(event) {
+            // Prevent default scrolling
+        }
+
+        function handleTouchEnd(event) {
+            touchEndY = event.changedTouches[0].screenY;
+            handleSwipe();
+        }
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartY - touchEndY;
+
+            if (Math.abs(diff) < 30) {
+                // Small swipe - flip the card
+                toggleFlip();
+            } else if (diff > swipeThreshold) {
+                // Swipe up - next event
+                if (!isFlipped) nextEvent();
+                else toggleFlip();
+            } else if (diff < -swipeThreshold) {
+                // Swipe down - previous event
+                if (!isFlipped) previousEvent();
+                else toggleFlip();
+            }
+        }
+
+        // Click to flip
+        document.getElementById('card').addEventListener('click', toggleFlip);
+
+        // Initialize
+        updateCard();
+    </script>
+</body>
+</html>
