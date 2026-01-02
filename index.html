@@ -60,6 +60,28 @@
             transform: rotateY(180deg);
         }
 
+        .card.slide-up {
+            animation: slideUp 0.6s ease-in forwards;
+        }
+
+        .card.slide-down {
+            animation: slideDown 0.6s ease-in forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(-500px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes slideDown {
+            to {
+                transform: translateY(500px);
+                opacity: 0;
+            }
+        }
+
         .card-face {
             position: absolute;
             width: 100%;
@@ -113,46 +135,7 @@
         }
 
         .controls {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 30px;
-        }
-
-        button {
-            flex: 1;
-            padding: 15px 25px;
-            font-size: 16px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-prev {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-next {
-            background: white;
-            color: #667eea;
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        .btn-prev:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-next:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
         }
 
         .counter {
@@ -210,7 +193,7 @@
         </div>
 
         <div class="swipe-hint">
-            👆 Свайп или нажми на карту чтобы перевернуть
+            👆 Листай вверх для новых событий
         </div>
 
         <div class="card-wrapper" id="cardWrapper" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)">
@@ -293,7 +276,9 @@
         ];
 
         let currentIndex = 0;
+        let touchStartY = 0;
         let touchStartX = 0;
+        let touchEndY = 0;
         let touchEndX = 0;
         let isFlipped = false;
 
@@ -304,30 +289,45 @@
             document.getElementById('eventDescription').textContent = event.description;
             document.getElementById('counter').textContent = `${currentIndex + 1} из ${events.length}`;
             isFlipped = false;
-            document.getElementById('card').classList.remove('flipped');
+            const card = document.getElementById('card');
+            card.classList.remove('flipped', 'slide-up', 'slide-down');
         }
 
         function nextEvent() {
             if (currentIndex < events.length - 1) {
                 currentIndex++;
-                updateCard();
+                const card = document.getElementById('card');
+                card.classList.add('slide-up');
+                setTimeout(() => {
+                    updateCard();
+                }, 300);
             }
         }
 
         function previousEvent() {
             if (currentIndex > 0) {
                 currentIndex--;
-                updateCard();
+                const card = document.getElementById('card');
+                card.classList.add('slide-down');
+                setTimeout(() => {
+                    updateCard();
+                }, 300);
             }
         }
 
         function toggleFlip() {
             const card = document.getElementById('card');
-            isFlipped = !isFlipped;
-            card.classList.toggle('flipped');
+            if (!isFlipped) {
+                isFlipped = true;
+                card.classList.add('flipped');
+            } else {
+                isFlipped = false;
+                card.classList.remove('flipped');
+            }
         }
 
         function handleTouchStart(event) {
+            touchStartY = event.changedTouches[0].screenY;
             touchStartX = event.changedTouches[0].screenX;
         }
 
@@ -336,25 +336,34 @@
         }
 
         function handleTouchEnd(event) {
+            touchEndY = event.changedTouches[0].screenY;
             touchEndX = event.changedTouches[0].screenX;
             handleSwipe();
         }
 
         function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartX - touchEndX;
+            const swipeThresholdVertical = 50;
+            const swipeThresholdHorizontal = 50;
+            const diffY = touchStartY - touchEndY;
+            const diffX = touchStartX - touchEndX;
 
-            if (Math.abs(diff) < 30) {
-                // Small swipe - flip the card
+            // Vertical swipe (up/down for navigation)
+            if (Math.abs(diffY) > swipeThresholdVertical) {
+                if (diffY > swipeThresholdVertical) {
+                    // Swipe up - next event
+                    nextEvent();
+                } else if (diffY < -swipeThresholdVertical) {
+                    // Swipe down - previous event
+                    previousEvent();
+                }
+            }
+            // Horizontal swipe (left/right for flip)
+            else if (Math.abs(diffX) > swipeThresholdHorizontal) {
                 toggleFlip();
-            } else if (diff > swipeThreshold) {
-                // Swipe left - next event
-                if (!isFlipped) nextEvent();
-                else toggleFlip();
-            } else if (diff < -swipeThreshold) {
-                // Swipe right - previous event
-                if (!isFlipped) previousEvent();
-                else toggleFlip();
+            }
+            // Small tap - flip the card
+            else if (Math.abs(diffY) < 15 && Math.abs(diffX) < 15) {
+                toggleFlip();
             }
         }
 
